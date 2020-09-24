@@ -7,23 +7,45 @@ import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
-        run();
+        startGame();
     }
 
-    public static void run() {
+    public static void startGame() {
         var scn = new Scanner(System.in);
         var rand = new Random();
 
-        String gameValue = generateGameValue(rand, 4);
-        String userValue = getUserValueFromConsole(scn);
+        int secretCodeLength = getSecretCodeLengthFromConsole(scn);
+        String secretCode = generateSecretCode(rand, secretCodeLength);
+        System.out.println("Okay, let's start a game!");
 
-        int[] result = grade(gameValue, userValue);
+        for (int i = 1; true; i++) {
+            System.out.println("Turn: " + i + ":");
+            String userCode = getUserCodeFromConsole(scn, secretCodeLength);
 
-        String outStr = createOutputString(result, gameValue);
-        System.out.println(outStr);
+            int[] outcome = grade(secretCode, userCode);
+
+            String outStr = createOutputString(outcome);
+            System.out.println(outStr);
+            // check if win
+            if (outcome[1] == secretCodeLength) {
+                System.out.println("Congratulations! you guessed the secret code!");
+                return;
+            }
+        }
     }
 
-    public static String generateGameValue(Random random, int len) {
+    public static int getSecretCodeLengthFromConsole(Scanner scn) {
+        while (true) {
+            System.out.println("Please enter the secret's code length: ");
+            try {
+                return Integer.parseInt(scn.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: incorrect input, please try again");
+            }
+        }
+    }
+
+    public static String generateSecretCode(Random random, int len) {
         if (len < 1) {
             throw new IllegalArgumentException("Error: len should be >=1.");
         }
@@ -39,23 +61,23 @@ public class Main {
         return gameVal.stream().map(Object::toString).collect(Collectors.joining(""));
     }
 
-    public static String getUserValueFromConsole(Scanner scn) {
+    public static String getUserCodeFromConsole(Scanner scn, int codeLen) {
         while (true) {
-            String userValue = scn.nextLine();
-            if (userValue.strip().matches("[\\d]{4}")) {
+            String userValue = scn.nextLine().trim();
+            if (userValue.matches("[\\d]{" + codeLen + "}")) {
                 return userValue;
             }
-            System.out.println("Incorrect input, please try again.");
+            System.out.println("Error: incorrect input, please try again.");
         }
     }
 
     /**
      * @return int[] where: [0] = num of cows, [1] = num of bulls
      */
-    public static int[] grade(String gameValue, String userValue) {
+    public static int[] grade(String secretCode, String userCode) {
         int[] result = new int[2];
-        for (int i = 0; i < gameValue.length(); i++) {
-            int index = gameValue.indexOf(userValue.charAt(i));
+        for (int i = 0; i < secretCode.length(); i++) {
+            int index = secretCode.indexOf(userCode.charAt(i));
             if (index != -1) {
                 if (index == i) {
                     result[1]++;
@@ -67,7 +89,7 @@ public class Main {
         return result;
     }
 
-    private static String createOutputString(int[] result, String gameValue) {
+    private static String createOutputString(int[] result) {
         var sb = new StringBuilder("Grade: ");
         int cows = result[0];
         int bulls = result[1];
@@ -83,7 +105,6 @@ public class Main {
         } else {
             throw new IllegalStateException("Something went wrong");
         }
-        sb.append(". The secret code is ").append(gameValue).append(".");
         return sb.toString();
     }
 }
