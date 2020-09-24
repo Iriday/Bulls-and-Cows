@@ -11,21 +11,27 @@ public class Main {
     }
 
     public static void startGame() {
+        final String symbols = "0123456789abcdefghijklmnopqrstuvwxyz";
         var scn = new Scanner(System.in);
         var rand = new Random();
 
-        int secretCodeLength = getSecretCodeLengthFromConsole(scn);
-        String secretCode = generateSecretCode(rand, secretCodeLength);
+        int secretCodeLength = getNumberFromConsole(scn, "Please enter the secret's code length:");
+        int numOfPossibleSymbols = getNumberFromConsole(scn, "Input the number of possible symbols in the code:");
+
+        String initialMessage = createInitialGameMessage(secretCodeLength, symbols, numOfPossibleSymbols);
+        System.out.println(initialMessage);
         System.out.println("Okay, let's start a game!");
+
+        String secretCode = generateSecretCode(rand, secretCodeLength, symbols, numOfPossibleSymbols);
 
         for (int i = 1; true; i++) {
             System.out.println("Turn: " + i + ":");
-            String userCode = getUserCodeFromConsole(scn, secretCodeLength);
+            String userCode = getUserCodeFromConsole(scn, secretCodeLength, symbols, numOfPossibleSymbols);
 
             int[] outcome = grade(secretCode, userCode);
 
-            String outStr = createOutputString(outcome);
-            System.out.println(outStr);
+            String outMsg = createOutcomeMessage(outcome);
+            System.out.println(outMsg);
             // check if win
             if (outcome[1] == secretCodeLength) {
                 System.out.println("Congratulations! you guessed the secret code!");
@@ -34,9 +40,9 @@ public class Main {
         }
     }
 
-    public static int getSecretCodeLengthFromConsole(Scanner scn) {
+    public static int getNumberFromConsole(Scanner scn, String message) {
+        System.out.println(message);
         while (true) {
-            System.out.println("Please enter the secret's code length: ");
             try {
                 return Integer.parseInt(scn.nextLine().trim());
             } catch (NumberFormatException e) {
@@ -45,30 +51,52 @@ public class Main {
         }
     }
 
-    public static String generateSecretCode(Random random, int len) {
-        if (len < 1) {
-            throw new IllegalArgumentException("Error: len should be >=1.");
+    public static String createInitialGameMessage(int codeLength, String symbols, int numOfPossibleSymbols) {
+        var sb = new StringBuilder("The secret is prepared: ")
+                .append("*".repeat(codeLength))
+                .append(" (0-");
+        if (numOfPossibleSymbols <= 10) {
+            sb.append(symbols.charAt(numOfPossibleSymbols - 1));
+        } else {
+            sb.append("9, a-")
+                    .append(symbols.charAt(numOfPossibleSymbols - 1));
         }
-        if (len > 10) {
-            throw new IllegalArgumentException("Error: can't generate a number with a length of "
-                    + len + ", because there aren't enough unique digits.");
-        }
-        var gameVal = new LinkedHashSet<Integer>();
+        sb.append(").");
 
-        while (gameVal.size() < len) {
-            gameVal.add(random.nextInt(10));
+        return sb.toString();
+    }
+
+    public static String generateSecretCode(Random random, int codeLength, String symbols, int numOfPossibleSymbols) {
+        if (codeLength < 1) {
+            throw new IllegalArgumentException("Error: codeLength should be >=1.");
+        }
+        if (numOfPossibleSymbols > symbols.length()) {
+            throw new IllegalArgumentException("Error: numOfPossibleSymbols should be <= symbols.length");
+        }
+        if (codeLength > numOfPossibleSymbols) {
+            throw new IllegalArgumentException("Error: codeLength should <= numOfPossibleSymbols");
+        }
+        var gameVal = new LinkedHashSet<Character>();
+
+        while (gameVal.size() < codeLength) {
+            gameVal.add(symbols.charAt(random.nextInt(numOfPossibleSymbols)));
         }
         return gameVal.stream().map(Object::toString).collect(Collectors.joining(""));
     }
 
-    public static String getUserCodeFromConsole(Scanner scn, int codeLen) {
+    public static String getUserCodeFromConsole(Scanner scn, int codeLen, String symbols, int numOfPossibleSymbols) {
         while (true) {
-            String userValue = scn.nextLine().trim();
-            if (userValue.matches("[\\d]{" + codeLen + "}")) {
-                return userValue;
+            String userCode = scn.nextLine().trim();
+            if (isCodeCorrect(userCode, codeLen, symbols, numOfPossibleSymbols)) {
+                return userCode;
             }
             System.out.println("Error: incorrect input, please try again.");
         }
+    }
+
+    // simple but slow, can be optimized
+    public static boolean isCodeCorrect(String code, int codeLen, String symbols, int numOfPossibleSymbols) {
+        return code.matches("[" + symbols.substring(0, numOfPossibleSymbols) + "]{" + codeLen + "}");
     }
 
     /**
@@ -89,10 +117,10 @@ public class Main {
         return result;
     }
 
-    private static String createOutputString(int[] result) {
+    public static String createOutcomeMessage(int[] outcome) {
         var sb = new StringBuilder("Grade: ");
-        int cows = result[0];
-        int bulls = result[1];
+        int cows = outcome[0];
+        int bulls = outcome[1];
 
         if (cows == 0 && bulls == 0) {
             sb.append("none");
