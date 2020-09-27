@@ -15,8 +15,8 @@ public class Main {
         var scn = new Scanner(System.in);
         var rand = new Random();
 
-        int secretCodeLength = getNumberFromConsole(scn, "Please enter the secret's code length:");
-        int numOfPossibleSymbols = getNumberFromConsole(scn, "Input the number of possible symbols in the code:");
+        int secretCodeLength = getSecretCodeLengthFromConsole(scn);
+        int numOfPossibleSymbols = getNumOfPossibleSymbolsFromConsole(scn, secretCodeLength);
 
         String initialMessage = createInitialGameMessage(secretCodeLength, symbols, numOfPossibleSymbols);
         System.out.println(initialMessage);
@@ -40,13 +40,36 @@ public class Main {
         }
     }
 
-    public static int getNumberFromConsole(Scanner scn, String message) {
-        System.out.println(message);
+    public static int getSecretCodeLengthFromConsole(Scanner scn) {
+        System.out.println("Please enter the secret's code length:");
         while (true) {
             try {
-                return Integer.parseInt(scn.nextLine().trim());
+                int num = Integer.parseInt(scn.nextLine().trim());
+                if (num >= 1 && num <= 36) {
+                    return num;
+                }
+                System.out.println("Error: secret's code length should be >=1 and <=36, please try again.");
             } catch (NumberFormatException e) {
-                System.out.println("Error: incorrect input, please try again");
+                System.out.println("Error: incorrect input, please tray again.");
+            }
+        }
+    }
+
+    public static int getNumOfPossibleSymbolsFromConsole(Scanner scn, int secretCodeLength) {
+        System.out.println("Input the number of possible symbols in the code:");
+        while (true) {
+            try {
+                int num = Integer.parseInt(scn.nextLine().trim());
+                if (num < secretCodeLength) {
+                    System.out.println("Error: it's not possible to generate a code with a length of "
+                            + secretCodeLength + " with " + num + " unique symbols. Please try again.");
+                } else if (num > 36) {
+                    System.out.println("Error: maximum number of possible symbols in the code is 36 (0-9, a-z). Please try again.");
+                } else {
+                    return num;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error: incorrect input, please tray again.");
             }
         }
     }
