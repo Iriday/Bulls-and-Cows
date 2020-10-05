@@ -50,7 +50,7 @@ public class Main {
                 }
                 System.out.println("Error: secret's code length should be >=1 and <=36, please try again.");
             } catch (NumberFormatException e) {
-                System.out.println("Error: incorrect input, please tray again.");
+                System.out.println("Error: incorrect input, please try again.");
             }
         }
     }
@@ -69,7 +69,7 @@ public class Main {
                     return num;
                 }
             } catch (NumberFormatException e) {
-                System.out.println("Error: incorrect input, please tray again.");
+                System.out.println("Error: incorrect input, please try again.");
             }
         }
     }
